@@ -14,83 +14,49 @@
 #include "sfml_exceptioins.h"
 #include "TimerBlock.h"
 
-enum ServerState {
-  establish_connection,
-  start_recording,
-  send_data
-};
-
-void ConnectionHandler(sf::TcpSocket& client_tcp, SendRecoder& recoder, 
-                       unsigned port, const bool& close) 
-{
-  sf::TcpListener listener;
-  if (listener.listen(port) != sf::Socket::Done)
-  {
-    throw PortBindingException(port);
-  }
-  listener.setBlocking(false);
-  TimerBlock timer = sf::milliseconds(100);
-  while (listener.accept(client_tcp) != sf::Socket::Done && !close)
-  {
-    timer.wait();
-  }
-  recoder.setClientAdress(client_tcp.getRemoteAddress());
-  recoder.start();
-}
-
 int main()
 {
-  sf::Window window(sf::VideoMode(200, 200), "Microphone Server");
-  
   const unsigned port = 8080;
 
   if (!SendRecoder::isAvailable())
     throw std::exception("Microphone isn't available");
 
-  SendRecoder recoder;
-  recoder.setClientPort(port);
-
   sf::TcpSocket client_tcp;
   client_tcp.setBlocking(false);
-
-  std::unique_ptr<std::thread> thr = nullptr;
-
-  bool close = false;
-  auto server_state = ServerState::establish_connection;
-  TimerBlock timer(sf::milliseconds(100));
-  while (window.isOpen()) {
-    switch (server_state)
+  
+  while (true) {
+    std::cout << "Listen to the client" << std::endl;
+    sf::TcpListener listener;
+    if (listener.listen(port) != sf::Socket::Done)
     {
-    case ServerState::establish_connection:
-    {
-      if (thr.get() != nullptr) {
-        close = true;
-        thr->join();
-        delete thr.get();
-        close = false;
-        recoder.stop();
-      }
-      thr.reset(new std::thread(ConnectionHandler, std::ref(client_tcp), std::ref(recoder),
-        port, std::cref(close)));
-      server_state = ServerState::send_data;
+      throw PortBindingException(port);
     }
-    case ServerState::send_data:
-    {
-      timer.wait();
-      sf::Event event;
-      window.waitEvent(event);
-      switch (event.type)
-      {
-      case sf::Event::Closed:
-        window.close();
-        close = true;
-        thr->join();
-      default:
+    if (listener.accept(client_tcp) != sf::Socket::Done)
+      throw std::exception("Cannot accept connection");
+
+    std::cout << "Start recording and sending to client" << std::endl;
+    SendRecoder recoder;
+    recoder.setChannelCount(1);
+    recoder.setClientSocket(client_tcp);
+    recoder.start();
+
+    while (true) {
+      size_t delay;
+      std::cout << "Enter delay in miliseconds: " << std::flush;
+      std::cin >> delay;
+      if (std::cin.fail()){
+        std::cout << "Invalid value" << std::endl;
+        std::cin.clear();
+        std::cin.ignore();
+        continue;
+      }
+      if (recoder.isStopped) {
+        std::cout << "Recoder was stopped" << std::endl;
         break;
       }
-    }
-    default:
-      break;
+      else if (delay < 10000) {
+        recoder.setDelay(sf::milliseconds(delay));
+      }
     }
   }
 

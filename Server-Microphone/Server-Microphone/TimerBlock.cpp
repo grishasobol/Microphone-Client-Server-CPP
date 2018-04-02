@@ -2,7 +2,7 @@
 
 void TimerBlock::wait() {
   if (getElapsedTime() < timeout) {
-    sf::sleep(getElapsedTime() - timeout);
+    sf::sleep(timeout - getElapsedTime());
   }
   restart();
 }

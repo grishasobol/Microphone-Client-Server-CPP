@@ -18,9 +18,19 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Server-Microphone\TimerBlock.cpp" />
+    <ClCompile Include="FFTAnalysis.cpp" />
+    <ClCompile Include="Source.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Server-Microphone\sfml_exceptioins.h" />
+    <ClInclude Include="..\Server-Microphone\TimerBlock.h" />
+    <ClInclude Include="FFTAnalysis.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3D218B12-DEEB-412C-8B68-37445BC8500C}</ProjectGuid>
-    <RootNamespace>ServerMicrophone</RootNamespace>
+    <ProjectGuid>{318065b5-69c5-45f6-9ebf-c494e1604d39}</ProjectGuid>
+    <RootNamespace>Client_FFT</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -96,7 +106,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\Gregory\Documents\SFML-2.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Gregory\Documents\SFML-2.4.2\include;C:\Users\Gregory\Source\Repos\Microphone-Client-Server-CPP\Server-Microphone\Server-Microphone;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SFML_STATIC;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -119,16 +129,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="SendRecoder.cpp" />
-    <ClCompile Include="Source.cpp" />
-    <ClCompile Include="TimerBlock.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="SendRecoder.h" />
-    <ClInclude Include="sfml_exceptioins.h" />
-    <ClInclude Include="TimerBlock.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

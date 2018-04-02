@@ -1,37 +1,61 @@
 #include "SendRecoder.h"
-
 #include "sfml_exceptioins.h"
+#include "TimerBlock.h"
+
+#include <iostream>
+#include <thread>
 
 SendRecoder::~SendRecoder()
 {
-  stop();
+  if (!isStopped) {
+    stop();
+  }
+  if (connection_thread.joinable())
+    connection_thread.join();
 }
 
-SendRecoder::SendRecoder() {}
-
-SendRecoder::SendRecoder(sf::IpAddress client_address, unsigned port) : 
-  client_address(client_address), port(port)
-{
-  auto result = socket.bind(port);
-  if (result != sf::Socket::Done)
-    throw PortBindingException(port);
+SendRecoder::SendRecoder() {
+  setProcessingInterval(sf::milliseconds(10));
+  batch_size = 10000;
 }
 
-void SendRecoder::setClientAdress(sf::IpAddress client_address) {
-  this->client_address = client_address;
+bool SendRecoder::onStart() {
+  isStopped = false;
+  connection_thread = std::thread{ &SendRecoder::ConnectionHandler, this };
+  return true;
 }
 
-void SendRecoder::setClientPort(unsigned port){
-  this->port = port;
-  auto result = socket.bind(port);
-  if (result != sf::Socket::Done)
-    throw PortBindingException(port);
+void SendRecoder::onStop() {
+  isStopped = true;
+}
+
+void SendRecoder::ConnectionHandler() {
+  TimerBlock timer(sf::milliseconds(10));
+  size_t sended;
+  while (!isStopped) {
+    while (!samples.empty()) {
+      auto result = socket->send(&samples[0] , std::min(samples.size(), batch_size), sended);
+      if (result == sf::Socket::Disconnected) {
+        isStopped = true;
+        stop();
+        break;
+      }
+      samples.erase(samples.begin(), samples.begin() + sended);
+      sf::sleep(delay);
+    }
+    timer.wait();
+  }
+}
+
+void SendRecoder::setClientSocket(sf::TcpSocket& client_socket) {
+  this->socket = &client_socket;
+}
+
+void SendRecoder::setDelay(const sf::Time& delay) {
+  this->delay = delay;
 }
 
 bool SendRecoder::onProcessSamples(const sf::Int16* samples, std::size_t sampleCount) {
-  auto result = socket.send(samples, sampleCount, client_address, port);
-  if (result != sf::Socket::Done)
-    return false;
-  else
-    return true;
+  this->samples.insert(this->samples.end(), samples, samples + sampleCount);
+  return true;
 }
